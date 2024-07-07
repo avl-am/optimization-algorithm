@@ -98,14 +98,15 @@ while t<T+1
         end
     end
     %-------------------------------------------------------------------------------------
-    % if mod(t,100)==0
-    %     display(['At iteration ', num2str(t), ' the best solution fitness is ', num2str(Best_FF)]);
-    % end
+%     if mod(t,100)==0
+%         display(['At iteration ', num2str(t), ' the best solution fitness is ', num2str(Best_FF)]);
+%     end
     conv(t)=Best_FF;
     t=t+1;
 end
 
 end
+
 function o=Levy(d)
 beta=1.5;
 sigma=(gamma(1+beta)*sin(pi*beta/2)/(gamma((1+beta)/2)*beta*2^((beta-1)/2)))^(1/beta);
@@ -129,5 +130,5 @@ if B_no>1
         X(:,i)=rand(N,1).*(Ub_i-Lb_i)+Lb_i;
     end
 end
-end
 
+end

@@ -14,7 +14,7 @@
 
 
 % The Nutcracker Optimization Algorithm
-function [Best_score,Best_NC,Convergence_curve,t]=NOA(SearchAgents_no,Max_iter,ub,lb,dim,fobj)
+function [Best_score,Best_NC,Convergence_curve,t]=NOA(SearchAgents_no,Max_iter,ub,lb,dim,fobj,fhd,Bm)
 
 %%-------------------Definitions--------------------------%%
 
@@ -38,8 +38,11 @@ t=0; %% Function evaluation counter
 
 %%---------------------Evaluation-----------------------%%
 for i=1:SearchAgents_no
-  
-   NC_Fit(i)=fobj(Positions(i,:));
+   if (Bm>=1) %% Test suites of CEC-2014, CEC-2017, CEC-2020, and CEC-2022
+       NC_Fit(i)=feval(fhd, Positions(i,:)',fobj);
+   else %% Twenty-Three standard test functions
+       NC_Fit(i)=fobj(Positions(i,:));
+   end
    LFit(i)=NC_Fit(i); %% Set the local best score for the ith Nutcracker as its current score.
 
    % Update the best-so-far solution
@@ -120,8 +123,11 @@ while t<Max_iter
              else
                    Positions(i,:) = min(max(Positions(i,:),lb),ub);
              end
-             %% Evaluation
-             NC_Fit(i)=fobj(Positions(i,:));
+             if (Bm>=1)
+                NC_Fit(i)=feval(fhd, Positions(i,:)',fobj);
+             else
+                NC_Fit(i)=fobj(Positions(i,:));
+             end
              % Update the local best according to Eq. (20)
              if NC_Fit(i)<LFit(i) % Change this to > for maximization problem
                   LFit(i)=NC_Fit(i); % Update the local best fitness
@@ -220,8 +226,12 @@ while t<Max_iter
               else
                   Positions(i,:) = min(max(Positions(i,:),lb),ub);
               end
-             %% Evaluation
-              NC_Fit(i)=fobj(Positions(i,:));
+              % Calculate objective function for each search agent
+              if (Bm>=1)
+                  NC_Fit(i)=feval(fhd, Positions(i,:)',fobj);
+              else
+                  NC_Fit(i)=fobj(Positions(i,:));
+              end
               % Update the local best
               if NC_Fit(i)<LFit(i) % Change this to > for maximization problem
                 LFit(i)=NC_Fit(i); 
@@ -240,16 +250,24 @@ while t<Max_iter
                 break;
               end
           else %% Exploration stage 2: Cache-search stage
-             %% ----------Evaluation---------------%% 
-             NC_Fit1=fobj(RP(1,:));
+             %%----------Evaluation---------------%% 
+             if (Bm>=1)
+                NC_Fit1=feval(fhd,  RP(1,:)',fobj);
+             else
+                NC_Fit1=fobj(RP(1,:));
+             end
              
              t=t+1;
              if t>Max_iter
                 break;
              end
      
-             %% -------Evaluations-----------
-             NC_Fit2=fobj(RP(2,:));
+             %%-------Evaluations-----------
+             if (Bm>=1)
+               NC_Fit2=feval(fhd, RP(2,:)',fobj);
+             else
+               NC_Fit2=fobj(RP(2,:));
+             end
              %%%%%----------- Applying Eq. (17) to trade-off between the exploration behaviors---------%%%%
              if NC_Fit2<NC_Fit1 && NC_Fit2<NC_Fit(i)
                Positions(i,:)=RP(2,:);
@@ -269,7 +287,7 @@ while t<Max_iter
              t=t+1;
              % Update the best-so-far solution
              if NC_Fit(i)<Best_score % Change this to > for maximization problem
-                 Best_score=NC_Fit(i); 
+                 Best_score=NC_Fit(i);
                  Best_NC=Positions(i,:);
              end
              if t>Max_iter
@@ -277,45 +295,6 @@ while t<Max_iter
              end
         end
       end
-    end
-end
-end
-
-
-function [z] = levy(n,m,beta)
-
-    num = gamma(1+beta)*sin(pi*beta/2); % used for Numerator 
-    
-    den = gamma((1+beta)/2)*beta*2^((beta-1)/2); % used for Denominator
-
-    sigma_u = (num/den)^(1/beta);% Standard deviation
-
-    u = random('Normal',0,sigma_u,n,m); 
-    
-    v = random('Normal',0,1,n,m);
-
-    z =u./(abs(v).^(1/beta));
-
-  
-end
-
-% This function initialize the first population of search agents
-function Positions=initialization(SearchAgents_no,dim,ub,lb)
-
-Boundary_no= length(ub); % numnber of boundaries
-
-% If the boundaries of all variables are equal and user enter a signle
-% number for both ub and lb
-if Boundary_no==1
-     Positions=rand(SearchAgents_no,dim).*(ub-lb)+lb;
-end
-
-% If each variable has a different lb and ub
-if Boundary_no>1
-    for i=1:dim
-        ub_i=ub(i);
-        lb_i=lb(i);
-         Positions(:,i)=rand(SearchAgents_no,1).*(ub_i-lb_i)+lb_i;      
     end
 end
 end

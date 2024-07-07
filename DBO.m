@@ -11,9 +11,7 @@
 % algorithm for global optimization. The Journal of Supercomputing, DOI:
 % 10.1007/s11227-022-04959-6
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% qq»∫£∫869592172
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [bestX, fMin , Convergence_curve ] = DBO(pop, M,c,d,dim,fobj  )
+function [fMin , bestX, Convergence_curve ] = DBO(pop, M,c,d,dim,fobj  )
         
    P_percent = 0.2;    % The population size of producers accounts for "P_percent" percent of the total population size       
 
@@ -28,8 +26,7 @@ ub= d.*ones( 1,dim );    % Upper limit/bounds/     a vector
 for i = 1 : pop
     
     x( i, : ) = lb + (ub - lb) .* rand( 1, dim );  
-    fit( i ) = fobj( x( i, : ) ) ;  
-    
+    fit( i ) = fobj( x( i, : ) ) ;                       
 end
 
 pFit = fit;                       

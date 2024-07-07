@@ -1,109 +1,112 @@
 
-function [best_fun,best_position,cuve_f,global_Cov]  =COA(N,T,lb,ub,dim,fobj)
-    %% Define Parameters
-    cuve_f=zeros(1,T); 
-    X=initialization(N,dim,ub,lb); %Initialize population
-    global_Cov = zeros(1,T);
-    Best_fitness = inf;
-    best_position = zeros(1,dim);
-    fitness_f = zeros(1,N);
-    for i=1:N
-       fitness_f(i) =  fobj(X(i,:)); %Calculate the fitness value of the function
-       if fitness_f(i)<Best_fitness
-           Best_fitness = fitness_f(i);
-           best_position = X(i,:);
-       end
-    end
-    global_position = best_position; 
-    global_fitness = Best_fitness;
-    cuve_f(1)=Best_fitness;
-    t=1; 
-    while(t<=T)
-        C = 2-(t/T); %Eq.(7)
-        temp = rand*15+20; %Eq.(3)
-        xf = (best_position+global_position)/2; % Eq.(5)
-        Xfood = best_position;
-        for i = 1:N
-            if temp>30
-                %% summer resort stage
-                if rand<0.5
-                    Xnew(i,:) = X(i,:)+C*rand(1,dim).*(xf-X(i,:)); %Eq.(6)
-                else
-                %% competition stage
-                    for j = 1:dim
-                        z = round(rand*(N-1))+1;  %Eq.(9)
-                        Xnew(i,j) = X(i,j)-X(z,j)+xf(j);  %Eq.(8)
-                    end
-                end
-            else
-                %% foraging stage
-                P = 3*rand*fitness_f(i)/fobj(Xfood); %Eq.(4)
-                P=floor(P);
-                if P>2   % The food is too big
-                     Xfood = exp(-1/P).*Xfood;   %Eq.(12)
-                    for j = 1:dim
-                        Xnew(i,j) = X(i,j)+cos(2*pi*rand)*Xfood(j)*p_obj(temp)-sin(2*pi*rand)*Xfood(j)*p_obj(temp); %Eq.(13)
-                    end
-                else
-                    Xnew(i,:) = (X(i,:)-Xfood)*p_obj(temp)+p_obj(temp).*rand(1,dim).*X(i,:); %Eq.(14)
-                end
-            end
-        end
-        
-        %% boundary conditions
-        for i=1:N
-            for j =1:dim
-                if length(ub)==1
-                    Xnew(i,j) = min(ub,Xnew(i,j));
-                    Xnew(i,j) = max(lb,Xnew(i,j));
-                else
-                    Xnew(i,j) = min(ub(j),Xnew(i,j));
-                    Xnew(i,j) = max(lb(j),Xnew(i,j));
-                end
-            end
-        end
-       
-        global_position = Xnew(1,:);
-        global_fitness = fobj(global_position);
-     
-        for i =1:N
-             %% Obtain the optimal solution for the updated population
-            new_fitness = fobj(Xnew(i,:));
-            if new_fitness<global_fitness
-                     global_fitness = new_fitness;
-                     global_position = Xnew(i,:);
-            end
-            %% Update the population to a new location
-            if new_fitness<fitness_f(i)
-                 fitness_f(i) = new_fitness;
-                 X(i,:) = Xnew(i,:);
-                 if fitness_f(i)<Best_fitness
-                     Best_fitness=fitness_f(i);
-                     best_position = X(i,:);
-                 end
-            end
-        end
-        global_Cov(t) = global_fitness;
-        cuve_f(t) = Best_fitness;
-        t=t+1;
-    end
-     best_fun = Best_fitness;
-end
-function y = p_obj(x)   %Eq.(4)
-    y = 0.2*(1/(sqrt(2*pi)*3))*exp(-(x-25).^2/(2*3.^2));
+
+
+
+%%% Designed, Zeinab Montazeri and Developed by Mohammad Dehghani and Pavel Trojovský %%%
+
+
+function[Best_score,Best_pos,COA_curve]=COA(SearchAgents,Max_iterations,lowerbound,upperbound,dimension,fitness)
+
+lowerbound=ones(1,dimension).*(lowerbound);                              % Lower limit for variables
+upperbound=ones(1,dimension).*(upperbound);                              % Upper limit for variables
+
+%% INITIALIZATION
+for i=1:dimension
+    X(:,i) = lowerbound(i)+rand(SearchAgents,1).*(upperbound(i) - lowerbound(i));                          % Initial population
 end
 
-function X=initialization(N,Dim,UB,LB)
-    B_no= size(UB,2); % numnber of boundaries
-    if B_no==1
-        X=rand(N,Dim).*(UB-LB)+LB;
-    end 
-    % If each variable has a different lb and ub
-    if B_no>1
-        for i=1:Dim
-            Ub_i=UB(i);
-            Lb_i=LB(i);
-            X(:,i)=rand(N,1).*(Ub_i-Lb_i)+Lb_i;
-        end
-    end
+for i =1:SearchAgents
+    L=X(i,:);
+    fit(i)=fitness(L);
 end
+%%
+
+for t=1:Max_iterations
+    %% update the best condidate solution
+    [best , location]=min(fit);
+    if t==1
+        Xbest=X(location,:);                                           % Optimal location
+        fbest=best;                                           % The optimization objective function
+    elseif best<fbest
+        fbest=best;
+        Xbest=X(location,:);
+    end
+    
+
+    
+    %%
+        for i=1:SearchAgents/2
+            
+            %% Phase1: Hunting and attacking strategy on iguana (Exploration Phase)
+            iguana=Xbest;
+            I=round(1+rand(1,1));
+
+            X_P1(i,:)=X(i,:)+rand(1,1) .* (iguana-I.*X(i,:)); % Eq. (4)
+            X_P1(i,:) = max(X_P1(i,:),lowerbound);X_P1(i,:) = min(X_P1(i,:),upperbound);
+            
+            % update position based on Eq (7)
+            L=X_P1(i,:);
+            F_P1(i)=fitness(L);
+            if(F_P1(i)<fit(i))
+                X(i,:) = X_P1(i,:);
+                fit(i) = F_P1(i);
+            end
+
+        end
+        %%
+
+        for i=1+SearchAgents/2 :SearchAgents
+
+            iguana=lowerbound+rand.*(upperbound-lowerbound); %Eq(5)
+            L=iguana;
+            F_HL=fitness(L);
+            I=round(1+rand(1,1));
+            
+            if fit(i)> F_HL
+                X_P1(i,:)=X(i,:)+rand(1,1) .* (iguana-I.*X(i,:)); % Eq. (6)
+            else
+                X_P1(i,:)=X(i,:)+rand(1,1) .* (X(i,:)-iguana); % Eq. (6)
+            end
+            X_P1(i,:) = max(X_P1(i,:),lowerbound);X_P1(i,:) = min(X_P1(i,:),upperbound);
+            
+            % update position based on Eq (7)
+            L=X_P1(i,:);
+            F_P1(i)=fitness(L);
+            if(F_P1(i)<fit(i))
+                X(i,:) = X_P1(i,:);
+                fit(i) = F_P1(i);
+            end
+        end
+        %% END Phase1: Hunting and attacking strategy on iguana (Exploration Phase)
+        
+        %%
+        
+        %% Phase2: The process of escaping from predators (Exploitation Phase)
+        for i=1:SearchAgents
+            LO_LOCAL=lowerbound/t;% Eq(9)
+            HI_LOCAL=upperbound/t;% Eq(10)
+            
+            X_P2(i,:)=X(i,:)+(1-2*rand).* (LO_LOCAL+rand(1,1) .* (HI_LOCAL-LO_LOCAL)); % Eq. (8)
+            X_P2(i,:) = max(X_P2(i,:),LO_LOCAL);X_P2(i,:) = min(X_P2(i,:),HI_LOCAL);
+            
+            % update position based on Eq (11)
+            L=X_P2(i,:);
+            F_P2(i)=fitness(L);
+            if(F_P2(i)<fit(i))
+                X(i,:) = X_P2(i,:);
+                fit(i) = F_P2(i);
+            end
+            
+        end
+        %% END Phase2: The process of escaping from predators (Exploitation Phase)
+    
+
+    best_so_far(t)=fbest;
+    average(t) = mean (fit);
+    
+end
+Best_score=fbest;
+Best_pos=Xbest;
+COA_curve=best_so_far;
+end
+

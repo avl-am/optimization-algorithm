@@ -46,6 +46,10 @@ Objective_values = zeros(1,size(X,1));
 
 % Calculate the fitness of the first set and find the best one
 for i=1:size(X,1)
+    
+             
+        
+    
     Objective_values(1,i)=fobj(X(i,:));
     if i==1
         Destination_position=X(i,:);
@@ -59,7 +63,7 @@ for i=1:size(X,1)
 end
 
 %Main loop
-t=2; % start from the second iteration since the first iteration was dedicated to calculating the fitness
+t=1; % start from the second iteration since the first iteration was dedicated to calculating the fitness
 while t<=Max_iteration
     
     % Eq. (3.4)

@@ -1,3 +1,16 @@
+%  Sinh Cosh Optimizer (SCHO)                                                                     
+%                                                                                                     
+%  Developed in MATLAB R2022a                                                                  
+%                                                                                                     
+%  programming: Jianfu Bai                                                          
+%                                                                                                     
+%  e-Mail: Jianfu.Bai@UGent.be, magd.abdelwahab@ugent.be                                                               
+%  Soete Laboratory, Department of Electrical Energy, Metals, Mechanical Constructions, and Systems, 
+%  Faculty of Engineering and Architecture, Ghent University, Belgium                                                           
+%                                                                                                                                                                                                                                                              
+%  paper: Jianfu Bai, Yifei Li, Mingpo Zheng, Samir Khatir, Brahim Benaisa, Laith Abualigah, Magd Abdel Wahab, A Sinh Cosh Optimizer, Knowledge-Based Systems, under review (2023).
+%______________________________________________________________________________________________
+
 function [Destination_fitness,Destination_position,Convergence_curve]=SCHO(N,Max_iteration,lb,ub,dim,fobj)
 
 Destination_position=zeros(1,dim);
@@ -44,8 +57,8 @@ while t<=Max_iteration
             A=(p-q*(t/Max_iteration)^(cosh2/(sinh2)))*r1; 
             % enter the bounded search strategy
             if t==BSi
-ub_2=Destination_position(j)+(1-t/Max_iteration)*abs(Destination_position(j)-Destination_position_second(j));
-lb_2=Destination_position(j)-(1-t/Max_iteration)*abs(Destination_position(j)-Destination_position_second(j));
+                ub_2=Destination_position(j)+(1-t/Max_iteration)*abs(Destination_position(j)-Destination_position_second(j));
+                lb_2=Destination_position(j)-(1-t/Max_iteration)*abs(Destination_position(j)-Destination_position_second(j));
                 if ub_2>ub
                     ub_2=ub;
                 end
@@ -105,6 +118,7 @@ lb_2=Destination_position(j)-(1-t/Max_iteration)*abs(Destination_position(j)-Des
         end
         BSi=BSi_temp;
     end
+
     for i=1:size(X,1)         
         % Check if solutions go outside the search spaceand bring them back
         Flag4ub=X(i,:)>ub_2;
@@ -124,16 +138,16 @@ lb_2=Destination_position(j)-(1-t/Max_iteration)*abs(Destination_position(j)-Des
         BS=BS+floor((Max_iteration-BS)/Alpha);
         temp = zeros(1,dim);
         temp2 = zeros(N,dim);
- %sorting
+        %sorting
         for i=1:(size(X,1)-1)
-          for j=1:(size(X,1)-1-i)
-            if Objective_values(1,j) > Objective_values(1,j+1)
-              temp(1,j) = Objective_values(1,j);
-              Objective_values(1,j) = Objective_values(1,j+1);
-              Objective_values(1,j+1) = temp(1,j);
-              temp2(j,:) = Position_sort(j,:);
-              Position_sort(j,:) = Position_sort(j+1,:);
-              Position_sort(j+1,:) = temp2(j,:);   
+	        for j=1:(size(X,1)-1-i)
+		        if Objective_values(1,j) > Objective_values(1,j+1)
+			        temp(1,j) = Objective_values(1,j);
+			        Objective_values(1,j) = Objective_values(1,j+1);
+			        Objective_values(1,j+1) = temp(1,j);
+			        temp2(j,:) = Position_sort(j,:);
+			        Position_sort(j,:) = Position_sort(j+1,:);
+			        Position_sort(j+1,:) = temp2(j,:);   
                 end
             end
         end
@@ -142,16 +156,16 @@ lb_2=Destination_position(j)-(1-t/Max_iteration)*abs(Destination_position(j)-Des
     Convergence_curve(t)=Destination_fitness;
     t=t+1;
 end
+end
 
+function X=initialization(SearchAgents_no,dim,ub,lb)
 
-function X=initialization(nP,dim,ub,lb)
+Boundary_no= size(ub,2); 
 
-Boundary_no= size(ub,2); % numnber of boundaries
+% If the boundaries of all variables are equal
 
-% If the boundaries of all variables are equal and user enter a signle
-% number for both ub and lb
 if Boundary_no==1
-    X=rand(nP,dim).*(ub-lb)+lb;
+    X=rand(SearchAgents_no,dim).*(ub-lb)+lb;  
 end
 
 % If each variable has a different lb and ub
@@ -159,6 +173,7 @@ if Boundary_no>1
     for i=1:dim
         ub_i=ub(i);
         lb_i=lb(i);
-        X(:,i)=rand(nP,1).*(ub_i-lb_i)+lb_i;
+        X(:,i)=rand(SearchAgents_no,1).*(ub_i-lb_i)+lb_i;
     end
+end
 end
